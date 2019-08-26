@@ -14,13 +14,14 @@ export default class Maps extends Component
 
     getInitialState = () => {
         return {
+            currentUser: null,
             region: {
                 latitude: 0,
                 longitude: 0,
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421
             },
-            currentUser: null
+            places: []
         }
     }
 
@@ -28,14 +29,18 @@ export default class Maps extends Component
         const { currentUser } = firebase.auth()
         this.setState({ currentUser })
 
+        
         Platform.OS === 'ios' ? false :
         RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
         .then(data => {
             console.log('Opa', 'GPS ligado')
             this.getLocation()
-        }).catch(err => {
-            Alert.alert('Ops', 'Não é possível identificar a localização.')
+            this.loadPlaces()
         })
+        .catch(err => {
+            Alert.alert('Ops',`Não deu bom não. (${JSON.stringify(err)})`)
+        })
+
     }
 
     hasLocationPermission = async () => {
@@ -80,10 +85,18 @@ export default class Maps extends Component
             },
             (error) => {
                 console.log(error)
-                Alert.alert('Ops', 'Não foi possível identificar a localizção');
+                Alert.alert('Ops', `Não foi possível identificar a localização. (${JSON.stringify(error)})`);
             },
-            { enableHighAccuracy: true, timeout: 1500, maximumAge: 1000, distanceFilter: 0, forceRequestLocation: true }
+            { enableHighAccuracy: false, timeout: 1500, maximumAge: 10000, distanceFilter: 10, forceRequestLocation: true }
         );
+    }
+
+    loadPlaces = () => {
+        const placesRef = firebase.database().ref('/locais');
+        placesRef.once('value').then(snapshot => {
+            this.setState({ places: snapshot.val() })
+        })
+        .catch(err => Alert.alert('Ops', JSON.stringify(err)))
     }
 
     render(){
@@ -95,7 +108,26 @@ export default class Maps extends Component
                 >
                     <Marker
                         coordinate={this.state.region}
-                    />                    
+                    />    
+                    {this.state.places.map((place, index) => (
+                        <Marker
+                        key={index}
+                        coordinate={{
+                            latitude: place.latitude,
+                            longitude: place.longitude,
+                            latitudeDelta: place.latitudeDelta,
+                            longitudeDelta: place.longitudeDelta
+                        }}
+                        title={place.nome}
+                        pinColor='green'
+                        onPress={e =>
+                            this.props.navigation.navigate("InfoPlace", {
+                                place: place.nome,
+                                events: place.eventos
+                            })
+                        }
+                        />
+                    ))}                
                 </MapView>
             </View>
         )
