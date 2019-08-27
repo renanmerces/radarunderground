@@ -4,7 +4,7 @@ import MapView, {Marker} from 'react-native-maps'
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler'
 import firebase from 'react-native-firebase'
 import Geolocation from 'react-native-geolocation-service'
- 
+
 export default class Maps extends Component
 {
     constructor(props) {
@@ -123,11 +123,19 @@ export default class Maps extends Component
                         onPress={e =>
                             this.props.navigation.navigate("InfoPlace", {
                                 place: place.nome,
-                                events: place.eventos
+                                events: place.eventos,
+                                myLocation: {
+                                    latitude: this.state.region.latitude,
+                                    longitude: this.state.region.longitude
+                                },
+                                placeLocation: {
+                                    latitude: place.latitude,
+                                    longitude: place.longitude
+                                }                                
                             })
                         }
                         />
-                    ))}                
+                    ))}     
                 </MapView>
             </View>
         )
