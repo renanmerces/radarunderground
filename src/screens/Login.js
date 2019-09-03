@@ -15,7 +15,7 @@ export default class Login extends Component {
         firebase
             .auth()
             .signInWithEmailAndPassword(email, password)
-            .then(() => this.props.navigation.navigate('Events'))
+            .then(() => this.props.navigation.navigate('Maps'))
             .catch(error => this.setState({ errorMessage: error.message }))
       }
     
