@@ -5,6 +5,7 @@ import moment from 'moment'
 import 'moment/locale/pt-br'
 import haversine from 'haversine'
 import { Rating } from 'react-native-ratings'
+import InfoEvent from '../modals/InfoEvent'
 
 export default class InfoPlace extends Component
 { 
@@ -12,7 +13,13 @@ export default class InfoPlace extends Component
         super(props)
         this.state = {
             dia: 0,
-            showModal: false
+            showModal: false,
+            infoModalVisible: false,
+            itemInfo: {
+                evento: '',
+                local: '',
+                data: ''
+            }
         }
     }
 
@@ -32,29 +39,51 @@ export default class InfoPlace extends Component
         else if(media == 5) return <Text>Avaliação: {media}/5 (Perfeito)</Text>
     }
 
+    openModal = item => {
+        this.setState({
+            itemInfo: {
+                evento: item.evento,
+                local: this.props.navigation.getParam('place'),
+                data: item.data
+            },
+            infoModalVisible: true
+        })
+    }
+
+    closeModal = () => {
+        this.setState({infoModalVisible: false})
+    }
+
     render(){
+
+        let media = this.props.navigation.getParam('qtdNotas') > 0 ? this.props.navigation.getParam('somaNotas')/this.props.navigation.getParam('qtdNotas') : null
+
         return(
             <View>
+                <InfoEvent 
+                    infoModalVisible={this.state.infoModalVisible} 
+                    modalClose={() => this.closeModal()}
+                    item={this.state.itemInfo}    
+                />
                 
                 <Text style={{fontSize: 20}}>{this.props.navigation.getParam('place')}</Text>
-                <View style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
-                    {   this.currentRating(this.props.navigation.getParam('qtdNotas'), this.props.navigation.getParam('somaNotas'))
-                    }
-                </View>
                 
-                <View style={{alignItems: 'center'}}>
-                    <Rating
-                        type='custom'
-                        ratingColor='yellow'
-                        ratingBackgroundColor='#c8c7c8'
-                        ratingCount={5}
-                        startingValue={0}
-                        imageSize={30}
-                        onFinishRating={this.ratingCompleted}
-                        style={{ paddingVertical: 10 }}
-                    />
-                    <Text>Arraste para avaliar</Text>
-                </View>
+                { 
+                    media &&
+                    <View style={{alignItems: 'center'}}>
+                        <Rating
+                            type='custom'
+                            ratingColor='yellow'
+                            ratingBackgroundColor='#c8c7c8'
+                            ratingCount={5}
+                            startingValue={media}
+                            imageSize={30}
+                            readonly={true}
+                            style={{ paddingVertical: 10 }}
+                        />
+                        { this.currentRating(this.props.navigation.getParam('qtdNotas'), this.props.navigation.getParam('somaNotas')) }                      
+                    </View>
+                }
                 
                 <Text>Distância da sua localização atual: {Number(haversine(this.props.navigation.getParam('myLocation'), this.props.navigation.getParam('placeLocation'), {unit: 'meter'})/1000).toFixed(2)} km</Text>
                 <View style={{
@@ -78,9 +107,9 @@ export default class InfoPlace extends Component
                     data={this.props.navigation.getParam('events').filter(event => moment(event.data).startOf('day').diff(moment().startOf('day').add(this.state.dia, 'days'), 'days') == 0)}
                     keyExtractor={(_, index) => `${index}`}
                     renderItem={({item}) => 
-                        <View>
+                        <TouchableOpacity style={{margin: 10, padding: 10}} onPress={() => this.openModal(item)}>
                             <Text style={{fontSize: 16}}>Evento: {item.evento}</Text>
-                        </View>
+                        </TouchableOpacity>
                     }
                 />
             </View>

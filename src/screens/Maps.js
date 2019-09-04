@@ -131,7 +131,9 @@ export default class Maps extends Component
                                 placeLocation: {
                                     latitude: place.latitude,
                                     longitude: place.longitude
-                                }                                
+                                },
+                                qtdNotas: place.qtdNotas,
+                                somaNotas: place.somaNotas                                
                             })
                         }
                         />

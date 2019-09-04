@@ -8,6 +8,7 @@ import Slider from '@react-native-community/slider'
 import Geolocation from 'react-native-geolocation-service'
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler'
 import haversine from 'haversine'
+import InfoEvent from '../modals/InfoEvent'
 
 export default class Events extends Component
 { 
@@ -22,6 +23,12 @@ export default class Events extends Component
                 longitude: 0,
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421
+            },
+            infoModalVisible: false,
+            itemInfo: {
+                evento: '',
+                local: '',
+                data: ''
             }
         }
     }
@@ -31,7 +38,6 @@ export default class Events extends Component
     }
 
     componentDidMount() {
-        
         Platform.OS === 'ios' ? false :
         RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
         .then(data => {
@@ -117,9 +123,29 @@ export default class Events extends Component
         );
     }
 
+    openModal = item => {
+        this.setState({
+            itemInfo: {
+                evento: item.evento,
+                local: item.local,
+                data: item.data
+            },
+            infoModalVisible: true
+        })
+    }
+
+    closeModal = () => {
+        this.setState({infoModalVisible: false})
+    }
+
     render(){
         return(
             <View>
+                <InfoEvent 
+                    infoModalVisible={this.state.infoModalVisible} 
+                    modalClose={() => this.closeModal()}
+                    item={this.state.itemInfo}    
+                />
                 <View style={{
                     flexDirection: 'row', 
                     width: '100%', 
@@ -142,8 +168,8 @@ export default class Events extends Component
                         style={{width: 200, height: 40}}
                         minimumValue={0}
                         maximumValue={100}
-                        minimumTrackTintColor="#FFFFFF"
-                        maximumTrackTintColor="#000000"
+                        minimumTrackTintColor="#AAA"
+                        maximumTrackTintColor="#555"
                         value={this.state.range}
                         onValueChange={value => this.setState({range: value})}
                     />
@@ -159,12 +185,10 @@ export default class Events extends Component
                             Number(haversine(this.state.region, {latitude: event.latitude, longitude: event.longitude}, {unit: 'meter'})/1000) < this.state.range)
                         }
                     keyExtractor={(_, index) => `${index}`}
-                    renderItem={({item}) => 
-                        <View>
+                    renderItem={({item}) =>
+                        <TouchableOpacity style={{margin: 10, padding: 10}} onPress={() => this.openModal(item)}>
                             <Text style={{fontSize: 16}}>Evento: {item.evento}</Text>
-                            <Text style={{fontSize: 12}}>Local: {item.local}</Text>
-                            <Text style={{fontSize: 12}}>Distância: {Number(haversine(this.state.region, {latitude: item.latitude, longitude: item.longitude}, {unit: 'meter'})/1000).toFixed(2)} km</Text>
-                        </View>
+                        </TouchableOpacity>
                     }
                 />
             </View>
