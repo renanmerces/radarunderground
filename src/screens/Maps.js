@@ -122,6 +122,7 @@ export default class Maps extends Component
                         pinColor='green'
                         onPress={e =>
                             this.props.navigation.navigate("InfoPlace", {
+                                id: index,
                                 place: place.nome,
                                 events: place.eventos,
                                 myLocation: {
@@ -133,7 +134,7 @@ export default class Maps extends Component
                                     longitude: place.longitude
                                 },
                                 qtdNotas: place.qtdNotas,
-                                somaNotas: place.somaNotas                                
+                                somaNotas: place.somaNotas              
                             })
                         }
                         />

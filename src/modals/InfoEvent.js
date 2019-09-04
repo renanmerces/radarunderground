@@ -25,6 +25,7 @@ export default props =>
                     <Text style={{margin: 10, padding: 10}}>Local: {props.item.local}</Text>
                     <Text style={{margin: 10, padding: 10}}>Data: {moment(props.item.data).locale('pt-br').format('DD/MM/YYYY')}</Text>
                     <Text style={{margin: 10, padding: 10}}>Atrações: X</Text>
+                    <Text style={{margin: 10, padding: 10}}>Valor: Y</Text>
                 </View>
                 <Button
                     style={{margin: 10, padding: 10}} 

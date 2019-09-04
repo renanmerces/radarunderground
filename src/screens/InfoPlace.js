@@ -1,11 +1,13 @@
 import React, {Component} from 'react'
-import {View, Text, FlatList, TouchableOpacity, Alert, Modal} from 'react-native'
+import {View, Text, FlatList, TouchableOpacity, TouchableWithoutFeedback, Alert} from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import moment from 'moment'
 import 'moment/locale/pt-br'
 import haversine from 'haversine'
 import { Rating } from 'react-native-ratings'
 import InfoEvent from '../modals/InfoEvent'
+import RatingPlace from '../modals/RatingPlace'
+import firebase from 'react-native-firebase'
 
 export default class InfoPlace extends Component
 { 
@@ -19,27 +21,23 @@ export default class InfoPlace extends Component
                 evento: '',
                 local: '',
                 data: ''
-            }
+            },
+            ratingModalVisible: false,
         }
-    }
-
-    ratingCompleted(rating) {
-        Alert.alert('Opa', 'Enviar sua nota? (Nota: ' + rating + ')')
     }
 
     currentRating(qtdNotas, somaNotas){
         const media = somaNotas/qtdNotas
 
-        if(qtdNotas == 0) return <Text>Local não avaliado</Text>
-        else if(media >= 0 && media < 1) return <Text>Avaliação: {media}/5 (Péssimo)</Text>
-        else if(media >= 1 && media < 2) return <Text>Avaliação: {media}/5 (Ruim)</Text>
-        else if(media >= 2 && media < 3) return <Text>Avaliação: {media}/5 (Ok)</Text>
-        else if(media >= 3 && media < 4) return <Text>Avaliação: {media}/5 (Bom)</Text>
-        else if(media >= 4 && media < 5) return <Text>Avaliação: {media}/5 (Excelente)</Text>
-        else if(media == 5) return <Text>Avaliação: {media}/5 (Perfeito)</Text>
+        if(qtdNotas == 0) return null
+        else if(media >= 1 && media < 2) return <Text>Avaliação: {media.toFixed(2)}/5 (Péssimo)</Text>
+        else if(media >= 2 && media < 3) return <Text>Avaliação: {media.toFixed(2)}/5 (Ruim)</Text>
+        else if(media >= 3 && media < 4) return <Text>Avaliação: {media.toFixed(2)}/5 (Ok)</Text>
+        else if(media >= 4 && media < 5) return <Text>Avaliação: {media.toFixed(2)}/5 (Bom)</Text>
+        else if(media == 5) return <Text>Avaliação: {media}/5 (Excelente)</Text>
     }
 
-    openModal = item => {
+    openInfoModal = item => {
         this.setState({
             itemInfo: {
                 evento: item.evento,
@@ -50,8 +48,32 @@ export default class InfoPlace extends Component
         })
     }
 
-    closeModal = () => {
+    closeInfoModal = () => {
         this.setState({infoModalVisible: false})
+    }
+
+    openRatingModal = () => {
+        this.setState({
+            ratingModalVisible: true
+        })
+    }
+
+    closeRatingModal = () => {
+        this.setState({ratingModalVisible: false})
+    }
+
+    updateNota = nota => {
+        this.setState({ratingModalVisible: false})
+        let novaSomaNotas = this.props.navigation.getParam('somaNotas') + nota
+        let novaQtdNotas = this.props.navigation.getParam('qtdNotas') + 1
+        firebase.database()
+            .ref(`/locais/${this.props.navigation.getParam('id')}`)
+            .update({
+                qtdNotas: novaQtdNotas,
+                somaNotas: novaSomaNotas
+            })
+            .then(() => Alert.alert('Opa', 'Deu bom'))
+            .catch(() => Alert.alert('Ops', 'Deu ruim'))
     }
 
     render(){
@@ -62,27 +84,53 @@ export default class InfoPlace extends Component
             <View>
                 <InfoEvent 
                     infoModalVisible={this.state.infoModalVisible} 
-                    modalClose={() => this.closeModal()}
+                    modalClose={() => this.closeInfoModal()}
                     item={this.state.itemInfo}    
+                />
+
+                <RatingPlace 
+                    ratingModalVisible={this.state.ratingModalVisible} 
+                    updateNota={this.updateNota}
+                    modalClose={() => this.closeRatingModal()}
                 />
                 
                 <Text style={{fontSize: 20}}>{this.props.navigation.getParam('place')}</Text>
                 
                 { 
-                    media &&
-                    <View style={{alignItems: 'center'}}>
-                        <Rating
-                            type='custom'
-                            ratingColor='yellow'
-                            ratingBackgroundColor='#c8c7c8'
-                            ratingCount={5}
-                            startingValue={media}
-                            imageSize={30}
-                            readonly={true}
-                            style={{ paddingVertical: 10 }}
-                        />
-                        { this.currentRating(this.props.navigation.getParam('qtdNotas'), this.props.navigation.getParam('somaNotas')) }                      
-                    </View>
+                    media ?
+                    <TouchableWithoutFeedback onPress={() => this.openRatingModal()}>
+                        <View style={{alignItems: 'center'}} >
+                            <Rating
+                                type='custom'
+                                ratingColor='yellow'
+                                ratingBackgroundColor='#c8c7c8'
+                                ratingCount={5}
+                                startingValue={media}
+                                imageSize={30}
+                                readonly={true}
+                                style={{ paddingVertical: 10 }}
+                            />
+                            { this.currentRating(this.props.navigation.getParam('qtdNotas'), this.props.navigation.getParam('somaNotas')) }     
+                            <Text>Clique para avaliar</Text>  
+                        </View>               
+                    </TouchableWithoutFeedback> 
+                    :
+                    <TouchableWithoutFeedback onPress={() => this.openRatingModal()}>
+                        <View style={{alignItems: 'center'}} >
+                            <Rating
+                                type='custom'
+                                ratingColor='yellow'
+                                ratingBackgroundColor='#c8c7c8'
+                                ratingCount={5}
+                                startingValue={0}
+                                imageSize={30}
+                                readonly={true}
+                                style={{ paddingVertical: 10 }}
+                            />
+                            <Text>Local não avaliado</Text>    
+                            <Text>Clique para avaliar</Text> 
+                        </View>                
+                    </TouchableWithoutFeedback>
                 }
                 
                 <Text>Distância da sua localização atual: {Number(haversine(this.props.navigation.getParam('myLocation'), this.props.navigation.getParam('placeLocation'), {unit: 'meter'})/1000).toFixed(2)} km</Text>
@@ -107,7 +155,7 @@ export default class InfoPlace extends Component
                     data={this.props.navigation.getParam('events').filter(event => moment(event.data).startOf('day').diff(moment().startOf('day').add(this.state.dia, 'days'), 'days') == 0)}
                     keyExtractor={(_, index) => `${index}`}
                     renderItem={({item}) => 
-                        <TouchableOpacity style={{margin: 10, padding: 10}} onPress={() => this.openModal(item)}>
+                        <TouchableOpacity style={{margin: 10, padding: 10}} onPress={() => this.openInfoModal(item)}>
                             <Text style={{fontSize: 16}}>Evento: {item.evento}</Text>
                         </TouchableOpacity>
                     }
