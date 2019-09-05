@@ -15,6 +15,10 @@ export default class RatingPlace extends Component
         this.setState({nota: rating})
     }
 
+    sendNewNota = () => {
+        this.props.updateNota(this.state.nota)
+    }
+
     render()
     {
         return(
@@ -48,7 +52,21 @@ export default class RatingPlace extends Component
                         <Button
                             style={{margin: 10, padding: 10}} 
                             title='Confirmar'
-                            onPress={() => this.props.updateNota(this.state.nota)}/>
+                            onPress={() => {
+                                Alert.alert(
+                                    'Confirmação', 
+                                    'Você confirma o envio da avaliação?',
+                                    [
+                                        {
+                                        text: 'Cancelar',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                        style: 'cancel',
+                                        },
+                                        {text: 'Enviar', onPress: () => this.sendNewNota()},
+                                    ],
+                                    {cancelable: false},
+                                )
+                            }}/>
                         <Button
                             style={{margin: 10, padding: 10}} 
                             title='Voltar'

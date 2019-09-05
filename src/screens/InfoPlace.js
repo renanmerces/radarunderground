@@ -17,6 +17,10 @@ export default class InfoPlace extends Component
             dia: 0,
             showModal: false,
             infoModalVisible: false,
+            place: '',
+            somaNotas: 0,
+            qtdNotas: 0,
+            id: 0,
             itemInfo: {
                 evento: '',
                 local: '',
@@ -24,6 +28,15 @@ export default class InfoPlace extends Component
             },
             ratingModalVisible: false,
         }
+    }
+
+    componentDidMount = () => {
+        this.setState({
+            id: this.props.navigation.getParam('id'),
+            place: this.props.navigation.getParam('place'),
+            qtdNotas: this.props.navigation.getParam('qtdNotas'),
+            somaNotas: this.props.navigation.getParam('somaNotas')
+        })
     }
 
     currentRating(qtdNotas, somaNotas){
@@ -41,7 +54,7 @@ export default class InfoPlace extends Component
         this.setState({
             itemInfo: {
                 evento: item.evento,
-                local: this.props.navigation.getParam('place'),
+                local: this.state.place,
                 data: item.data
             },
             infoModalVisible: true
@@ -64,21 +77,25 @@ export default class InfoPlace extends Component
 
     updateNota = nota => {
         this.setState({ratingModalVisible: false})
-        let novaSomaNotas = this.props.navigation.getParam('somaNotas') + nota
-        let novaQtdNotas = this.props.navigation.getParam('qtdNotas') + 1
+        let novaSomaNotas = this.state.somaNotas + nota
+        let novaQtdNotas = this.state.qtdNotas + 1
         firebase.database()
-            .ref(`/locais/${this.props.navigation.getParam('id')}`)
+            .ref(`/locais/${this.state.id}`)
             .update({
                 qtdNotas: novaQtdNotas,
                 somaNotas: novaSomaNotas
             })
+            .then(() => this.setState({
+                qtdNotas: novaQtdNotas,
+                somaNotas: novaSomaNotas
+            }))
             .then(() => Alert.alert('Opa', 'Deu bom'))
             .catch(() => Alert.alert('Ops', 'Deu ruim'))
     }
 
     render(){
 
-        let media = this.props.navigation.getParam('qtdNotas') > 0 ? this.props.navigation.getParam('somaNotas')/this.props.navigation.getParam('qtdNotas') : null
+        let media = this.state.qtdNotas > 0 ? this.state.somaNotas/this.state.qtdNotas : null
 
         return(
             <View>
@@ -94,7 +111,7 @@ export default class InfoPlace extends Component
                     modalClose={() => this.closeRatingModal()}
                 />
                 
-                <Text style={{fontSize: 20}}>{this.props.navigation.getParam('place')}</Text>
+                <Text style={{fontSize: 20}}>{this.state.place}</Text>
                 
                 { 
                     media ?
@@ -110,7 +127,7 @@ export default class InfoPlace extends Component
                                 readonly={true}
                                 style={{ paddingVertical: 10 }}
                             />
-                            { this.currentRating(this.props.navigation.getParam('qtdNotas'), this.props.navigation.getParam('somaNotas')) }     
+                            { this.currentRating(this.state.qtdNotas, this.state.somaNotas) }     
                             <Text>Clique para avaliar</Text>  
                         </View>               
                     </TouchableWithoutFeedback> 
