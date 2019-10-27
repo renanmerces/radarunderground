@@ -21,7 +21,8 @@ export default class SignUp extends Component {
     render() {
         return (
         <View style={styles.container}>
-            <Text>Realizar cadastro</Text>
+            <Text style={styles.logo}>Radar</Text>
+            <Text style={styles.logo}>Underground</Text>
             {this.state.errorMessage &&
             <Text style={{ color: 'red' }}>
                 {this.state.errorMessage}
@@ -59,14 +60,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: '#555'
+    },
+    logo:{
+        color: 'white',
+        fontSize: 30,
+        fontStyle: 'italic'
     },
     textInput: {
         height: 40,
         width: '90%',
         borderColor: 'gray',
         borderWidth: 1,
-        marginTop: 8
+        marginTop: 8,
+        backgroundColor: 'white',
+
     },
     button: {
         margin: 10

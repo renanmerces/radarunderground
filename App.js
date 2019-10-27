@@ -10,13 +10,37 @@ import Maps from './src/screens/Maps'
 import InfoPlace from './src/screens/InfoPlace'
 import Events from './src/screens/Events'
 
+import Menu from './Menu'
+
 const MainNav = createDrawerNavigator(
   {
-    Events,
-    Maps
+    Events: {
+      screen: Events,
+      navigationOptions: {
+          title: 'Eventos'
+      }
+    },
+    Maps: {
+      screen: Maps,
+      navigationOptions: {
+          title: 'Mapa'
+      }
+    },
   },
-  {
-    initialRouteName: 'Maps'
+  { 
+    initialRouteName: 'Maps',
+    contentComponent: Menu,
+    contentOptions:{
+        labelStyle:{
+            fontSize: 20
+            },
+        activateLabel:{
+            color: '#080'
+        },
+    },
+    drawerBackgroundColor: '#FFF',
+    drawerPosition: 'left',
+    drawerWidth: 280
   }
 )
 
@@ -27,6 +51,7 @@ const EventsNav = createStackNavigator(
       navigationOptions: ({ navigation }) => ({
         headerLeft: (
           <TouchableHighlight
+            style={{padding: 10}}
             onPress={() => navigation.openDrawer()}
           >
               <Icon name='bars' size={30} color="#000"/>
@@ -40,6 +65,7 @@ const EventsNav = createStackNavigator(
         title: 'Informações',
         headerLeft: (
           <TouchableHighlight
+            style={{padding: 10}}
             onPress={() => navigation.goBack(null)}
           >
               <Icon name='arrow-left' size={30} color="#000"/>
